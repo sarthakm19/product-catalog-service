@@ -1,0 +1,41 @@
+services:
+  redis:
+      image: redis:7-alpine
+      container_name: product-catalog-redis
+      ports:
+        - "6379:6379"
+      networks:
+        - product-catalog-network
+  postgres:
+    image: postgres:15-alpine
+    container_name: product-catalog-postgres
+    environment:
+      POSTGRES_DB: product_catalog_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - product-catalog-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: product-catalog-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8081:80"
+    depends_on:
+      - postgres
+    networks:
+      - product-catalog-network
+
+volumes:
+  postgres_data:
+
+networks:
+  product-catalog-network:
+    driver: bridge

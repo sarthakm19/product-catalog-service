@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Create catalogs table -->
+    <changeSet id="001-create-catalogs-table" author="system">
+        <createTable tableName="catalogs">
+            <column name="code" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="catalog_version" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <sql><![CDATA[
+            ALTER TABLE catalogs ADD CONSTRAINT chk_catalog_version
+            CHECK (catalog_version IN ('STAGED', 'ONLINE'));
+        ]]></sql>
+    </changeSet>
+
+    <!-- Create categories table -->
+    <changeSet id="002-create-categories-table" author="system">
+        <createTable tableName="categories">
+            <column name="code" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false" unique="true"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="parent_category_id" type="VARCHAR(255)"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="categories"
+                               baseColumnNames="parent_category_id"
+                               constraintName="fk_category_parent"
+                               referencedTableName="categories"
+                               referencedColumnNames="code"
+                               onDelete="SET NULL"/>
+    </changeSet>
+
+    <!-- Create category_subcategories junction table -->
+    <changeSet id="003-create-category-subcategories-table" author="system">
+        <createTable tableName="category_subcategories">
+            <column name="parent_category_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subcategory_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="category_subcategories"
+                      columnNames="parent_category_id, subcategory_id"
+                      constraintName="pk_category_subcategories"/>
+
+        <addForeignKeyConstraint baseTableName="category_subcategories"
+                               baseColumnNames="parent_category_id"
+                               constraintName="fk_category_parent_id"
+                               referencedTableName="categories"
+                               referencedColumnNames="code"
+                               onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="category_subcategories"
+                               baseColumnNames="subcategory_id"
+                               constraintName="fk_category_sub_id"
+                               referencedTableName="categories"
+                               referencedColumnNames="code"
+                               onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- Create products table -->
+    <changeSet id="004-create-products-table" author="system">
+        <createTable tableName="products">
+            <column name="code" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="description" type="VARCHAR(1000)"/>
+            <column name="base_price_value" type="DECIMAL(19,2)"/>
+            <column name="base_price_currency" type="VARCHAR(3)"/>
+            <column name="is_in_stock" type="BOOLEAN" defaultValue="false"/>
+            <column name="stock_keeping_unit" type="VARCHAR(255)"/>
+            <column name="category_id" type="VARCHAR(255)"/>
+            <column name="catalog_code" type="VARCHAR(255)"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="products"
+                               baseColumnNames="category_id"
+                               constraintName="fk_product_category"
+                               referencedTableName="categories"
+                               referencedColumnNames="code"
+                               onDelete="SET NULL"/>
+
+        <addForeignKeyConstraint baseTableName="products"
+                               baseColumnNames="catalog_code"
+                               constraintName="fk_product_catalog"
+                               referencedTableName="catalogs"
+                               referencedColumnNames="code"
+                               onDelete="SET NULL"/>
+    </changeSet>
+
+    <!-- Create reviews table -->
+    <changeSet id="005-create-reviews-table" author="system">
+        <createTable tableName="reviews">
+            <column name="id" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="comment" type="TEXT"/>
+            <column name="rating" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_code" type="VARCHAR(255)"/>
+            <column name="created_date" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="reviews"
+                               baseColumnNames="product_code"
+                               constraintName="fk_review_product"
+                               referencedTableName="products"
+                               referencedColumnNames="code"
+                               onDelete="CASCADE"/>
+
+        <sql><![CDATA[
+            ALTER TABLE reviews ADD CONSTRAINT chk_rating_range
+            CHECK (rating >= 1 AND rating <= 5);
+        ]]></sql>
+    </changeSet>
+
+    <!-- Create indexes for better performance -->
+    <changeSet id="006-create-indexes" author="system">
+        <createIndex tableName="products" indexName="idx_product_category">
+            <column name="category_id"/>
+        </createIndex>
+
+        <createIndex tableName="products" indexName="idx_product_catalog">
+            <column name="catalog_code"/>
+        </createIndex>
+
+        <createIndex tableName="products" indexName="idx_product_stock">
+            <column name="is_in_stock"/>
+        </createIndex>
+
+        <createIndex tableName="reviews" indexName="idx_review_product">
+            <column name="product_code"/>
+        </createIndex>
+
+        <createIndex tableName="reviews" indexName="idx_review_rating">
+            <column name="rating"/>
+        </createIndex>
+
+        <createIndex tableName="categories" indexName="idx_category_code">
+            <column name="code"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

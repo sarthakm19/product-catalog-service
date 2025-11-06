@@ -1,0 +1,53 @@
+@startuml
+
+enum CatalogVersion {
+STAGED; ONLINE
+}
+
+class Product {
+  String code
+  String name
+  String description
+  Price basePrice
+  boolean isInStock
+  String stockKeepingUnit
+  List<Review> reviews
+}
+
+class Category {
+  Long id
+  String code
+  String name
+}
+
+class CategoryCategoryRelation {
+  Long parentCategoryId
+  Long childCategoryId
+}
+
+class Price {
+  Double value
+  String currency
+}
+
+class Catalog {
+  String code
+  String name
+  CatalogVersion catalogVersion
+  List<Product> products
+}
+
+class Review {
+  String id
+  String comment
+  Integer rating
+}
+
+Category "1" *-- "many" Product
+Product "1" *-- "many" Review
+Product "1" -- "1" Price
+Catalog "1" *-- "many" Product
+Category "1" o-- "*" CategoryCategoryRelation : parent
+Category "1" o-- "*" CategoryCategoryRelation : child
+
+@enduml

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Insert sample catalog data -->
+    <changeSet id="007-insert-sample-catalogs" author="system">
+        <insert tableName="catalogs">
+            <column name="code" value="MAIN_CATALOG"/>
+            <column name="name" value="Main Product Catalog"/>
+            <column name="catalog_version" value="ONLINE"/>
+        </insert>
+
+        <insert tableName="catalogs">
+            <column name="code" value="STAGING_CATALOG"/>
+            <column name="name" value="Staging Catalog"/>
+            <column name="catalog_version" value="STAGED"/>
+        </insert>
+    </changeSet>
+
+    <!-- Insert sample categories -->
+    <changeSet id="008-insert-sample-categories" author="system">
+        <insert tableName="categories">
+            <column name="code" value="ELECTRONICS"/>
+            <column name="name" value="Electronics"/>
+            <column name="description" value="Electronic devices and gadgets"/>
+        </insert>
+
+        <insert tableName="categories">
+            <column name="code" value="SMARTPHONES"/>
+            <column name="name" value="Smartphones"/>
+            <column name="description" value="Mobile phones and accessories"/>
+            <column name="parent_category_id" value="ELECTRONICS"/>
+        </insert>
+
+        <insert tableName="categories">
+            <column name="code" value="LAPTOPS"/>
+            <column name="name" value="Laptops"/>
+            <column name="description" value="Laptop computers and accessories"/>
+            <column name="parent_category_id" value="ELECTRONICS"/>
+        </insert>
+
+        <insert tableName="categories">
+            <column name="code" value="CLOTHING"/>
+            <column name="name" value="Clothing"/>
+            <column name="description" value="Apparel and fashion items"/>
+        </insert>
+    </changeSet>
+
+    <!-- Insert sample products -->
+    <changeSet id="009-insert-sample-products" author="system">
+        <insert tableName="products">
+            <column name="code" value="IPHONE_15"/>
+            <column name="name" value="iPhone 15"/>
+            <column name="description" value="Latest Apple iPhone with advanced features"/>
+            <column name="base_price_value" value="999.99"/>
+            <column name="base_price_currency" value="USD"/>
+            <column name="is_in_stock" value="true"/>
+            <column name="stock_keeping_unit" value="APL-IPH15-128GB"/>
+            <column name="category_id" value="SMARTPHONES"/>
+            <column name="catalog_code" value="MAIN_CATALOG"/>
+        </insert>
+
+        <insert tableName="products">
+            <column name="code" value="MACBOOK_PRO"/>
+            <column name="name" value="MacBook Pro 16-inch"/>
+            <column name="description" value="Professional laptop with M3 chip"/>
+            <column name="base_price_value" value="2499.99"/>
+            <column name="base_price_currency" value="USD"/>
+            <column name="is_in_stock" value="true"/>
+            <column name="stock_keeping_unit" value="APL-MBP16-512GB"/>
+            <column name="category_id" value="LAPTOPS"/>
+            <column name="catalog_code" value="MAIN_CATALOG"/>
+        </insert>
+    </changeSet>
+
+    <!-- Insert sample reviews -->
+    <changeSet id="010-insert-sample-reviews" author="system">
+        <insert tableName="reviews">
+            <column name="id" value="REV_001"/>
+            <column name="comment" value="Excellent phone with great camera quality"/>
+            <column name="rating" value="5"/>
+            <column name="product_code" value="IPHONE_15"/>
+        </insert>
+
+        <insert tableName="reviews">
+            <column name="id" value="REV_002"/>
+            <column name="comment" value="Outstanding performance for professional work"/>
+            <column name="rating" value="5"/>
+            <column name="product_code" value="MACBOOK_PRO"/>
+        </insert>
+
+        <insert tableName="reviews">
+            <column name="id" value="REV_003"/>
+            <column name="comment" value="Good value for money but battery could be better"/>
+            <column name="rating" value="4"/>
+            <column name="product_code" value="IPHONE_15"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
