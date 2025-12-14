@@ -65,8 +65,8 @@ case $ACTION in
 
         echo ""
         echo "🌐 Application URLs:"
-        echo "  Swagger UI: http://localhost:8080/swagger-ui.html"
-        echo "  Health:     http://localhost:8080/actuator/health"
+        echo "  Swagger UI: http://localhost:8086/swagger-ui.html"
+        echo "  Health:     http://localhost:8086/actuator/health"
         echo "  PgAdmin:    http://localhost:8081"
         echo ""
         echo "📝 View logs:"
@@ -113,3 +113,25 @@ case $ACTION in
         ;;
 esac
 
+# Check port 8086
+if command -v lsof >/dev/null 2>&1 && lsof -i :8086 >/dev/null 2>&1; then
+    echo "⚠️  Port 8086 is in use. Set SERVER_PORT to a free port."
+    exit 1
+fi
+
+echo "✅ Port 8086 is available"
+echo ""
+
+# Additional setup or configuration can be added here
+
+echo "🎉 Setup complete! You can now access the services."
+echo "   Swagger UI: http://localhost:8086/swagger-ui.html"
+echo "   API Docs:   http://localhost:8086/v3/api-docs"
+echo "   Health:     http://localhost:8086/actuator/health"
+echo "   PgAdmin:    http://localhost:8081"
+echo ""
+echo "📝 View logs:"
+echo "  docker-compose logs -f app"
+echo ""
+echo "🛑 Stop services:"
+echo "  docker-compose down"

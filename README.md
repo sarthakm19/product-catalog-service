@@ -82,6 +82,8 @@ com.product.catalog/
 |--------|----------|-------------|---------------|
 | POST | `/api/v1/auth/login` | Authenticate and get JWT token | No |
 
+**📖 For detailed authentication documentation, see [AUTHENTICATION.md](AUTHENTICATION.md)**
+
 ### Products
 
 | Method | Endpoint | Description | Auth Required |
@@ -126,14 +128,14 @@ com.product.catalog/
 2. Start PostgreSQL (see below for Docker command)
 3. (Optional) Set environment variables for JWT secret and server port:
    - `export JWT_SECRET=your-very-secret-key`
-   - `export SERVER_PORT=8080` (or any free port)
+   - `export SERVER_PORT=8087` (default port)
 4. Build and run:
    ```sh
    ./gradlew clean build
    ./gradlew bootRun
    ```
 
-The application will start on `http://localhost:8080`
+The application will start on `http://localhost:8087`
 
 ## Docker Deployment
 

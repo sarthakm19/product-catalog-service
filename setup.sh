@@ -35,9 +35,9 @@ if [ -z "$JAVA_VERSION" ] || [ "$JAVA_VERSION" -lt 25 ]; then
     exit 1
 fi
 
-# Check port 8080
-if command -v lsof >/dev/null 2>&1 && lsof -i :8080 >/dev/null 2>&1; then
-    echo "⚠️  Port 8080 is in use. Set SERVER_PORT to a free port."
+# Check port 8086
+if command -v lsof >/dev/null 2>&1 && lsof -i :8086 >/dev/null 2>&1; then
+    echo "⚠️  Port 8086 is in use. Set SERVER_PORT to a free port."
 fi
 
 # Remind about JWT_SECRET
@@ -92,9 +92,9 @@ echo "   OR in IntelliJ IDEA:"
 echo "   Run → ProductCatalogServiceApplication"
 echo ""
 echo "🌐 Once running, access:"
-echo "   Swagger UI: http://localhost:8080/swagger-ui.html"
-echo "   API Docs:   http://localhost:8080/v3/api-docs"
-echo "   Health:     http://localhost:8080/actuator/health"
+echo "   Swagger UI: http://localhost:8086/swagger-ui.html"
+echo "   API Docs:   http://localhost:8086/v3/api-docs"
+echo "   Health:     http://localhost:8086/actuator/health"
 echo ""
 echo "🔑 Default credentials:"
 echo "   Username: admin"

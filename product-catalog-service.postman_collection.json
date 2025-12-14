@@ -6,7 +6,7 @@
     "description": "API collection for Product Catalog Service (Spring Boot 4, Java 25). Use with Postman or Bruno."
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "baseUrl", "value": "http://localhost:8086" },
     { "key": "jwtToken", "value": "" }
   ],
   "item": [
@@ -144,4 +144,3 @@
     }
   ]
 }
-

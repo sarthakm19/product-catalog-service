@@ -7,7 +7,7 @@ This guide provides instructions for building, running, and deploying the Produc
 - Docker 20.10+ installed
 - Docker Compose 2.0+ installed
 - At least 2GB RAM available for Docker
-- Port 8080, 5432, and 8081 available (or configure alternative ports)
+- Port 8086, 5432, and 8081 available (or configure alternative ports)
 
 ## Quick Start with Docker Compose
 
@@ -26,9 +26,9 @@ docker-compose ps
 
 ### 2. Access the Application
 
-- **Swagger UI**: http://localhost:8080/swagger-ui.html
-- **API Docs**: http://localhost:8080/v3/api-docs
-- **Health Check**: http://localhost:8080/actuator/health
+- **Swagger UI**: http://localhost:8086/swagger-ui.html
+- **API Docs**: http://localhost:8086/v3/api-docs
+- **Health Check**: http://localhost:8086/actuator/health
 - **PgAdmin**: http://localhost:8081 (admin@admin.com / admin)
 
 ### 3. Stop Services
@@ -85,7 +85,7 @@ docker run -d \
 # Run the application
 docker run -d \
   --name product-catalog-service \
-  -p 8080:8080 \
+  -p 8086:8086 \
   -e SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/product_catalog_db \
   -e SPRING_DATASOURCE_USERNAME=postgres \
   -e SPRING_DATASOURCE_PASSWORD=password \
@@ -98,8 +98,8 @@ docker run -d \
 ```bash
 docker run -d \
   --name product-catalog-service \
-  -p 9090:8080 \
-  -e SERVER_PORT=8080 \
+  -p 9090:8086 \
+  -e SERVER_PORT=8086 \
   -e SPRING_DATASOURCE_URL=jdbc:postgresql://your-db-host:5432/your_db \
   -e SPRING_DATASOURCE_USERNAME=your_user \
   -e SPRING_DATASOURCE_PASSWORD=your_password \
@@ -113,7 +113,7 @@ docker run -d \
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `SERVER_PORT` | Application port | 8080 | No |
+| `SERVER_PORT` | Application port | 8086 | No |
 | `SPRING_DATASOURCE_URL` | PostgreSQL JDBC URL | - | Yes |
 | `SPRING_DATASOURCE_USERNAME` | Database username | - | Yes |
 | `SPRING_DATASOURCE_PASSWORD` | Database password | - | Yes |
@@ -143,7 +143,7 @@ docker run -d \
 2. **Create ECS Task Definition** with:
    - Container image: ECR repository URL
    - Environment variables: Set from AWS Secrets Manager or Parameter Store
-   - Port mappings: 8080
+   - Port mappings: 8086
    - Health check: `/actuator/health`
    - CPU: 512-1024 (0.5-1 vCPU)
    - Memory: 1024-2048 MB
@@ -160,9 +160,9 @@ az container create \
   --name product-catalog-service \
   --image <your-registry>/product-catalog-service:latest \
   --dns-name-label product-catalog \
-  --ports 8080 \
+  --ports 8086 \
   --environment-variables \
-    SERVER_PORT=8080 \
+    SERVER_PORT=8086 \
     SPRING_DATASOURCE_URL='jdbc:postgresql://your-db:5432/db' \
   --secure-environment-variables \
     SPRING_DATASOURCE_PASSWORD='password' \
@@ -185,7 +185,7 @@ gcloud run deploy product-catalog-service \
   --allow-unauthenticated \
   --set-env-vars SPRING_DATASOURCE_URL=jdbc:postgresql://... \
   --set-secrets JWT_SECRET=jwt-secret:latest \
-  --port 8080 \
+  --port 8086 \
   --memory 1Gi \
   --cpu 1
 ```
@@ -212,7 +212,7 @@ spec:
       - name: app
         image: your-registry/product-catalog-service:latest
         ports:
-        - containerPort: 8080
+        - containerPort: 8086
         env:
         - name: SPRING_DATASOURCE_URL
           value: "jdbc:postgresql://postgres-service:5432/product_catalog_db"
@@ -241,13 +241,13 @@ spec:
         livenessProbe:
           httpGet:
             path: /actuator/health
-            port: 8080
+            port: 8086
           initialDelaySeconds: 60
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /actuator/health
-            port: 8080
+            port: 8086
           initialDelaySeconds: 30
           periodSeconds: 5
 ---
@@ -261,7 +261,7 @@ spec:
   ports:
   - protocol: TCP
     port: 80
-    targetPort: 8080
+    targetPort: 8086
   type: LoadBalancer
 ```
 
@@ -345,7 +345,7 @@ docker logs product-catalog-service > app.log 2>&1
 docker inspect --format='{{.State.Health.Status}}' product-catalog-service
 
 # Continuous health monitoring
-watch -n 5 'curl -s http://localhost:8080/actuator/health | jq'
+watch -n 5 'curl -s http://localhost:8086/actuator/health | jq'
 ```
 
 ## Performance Optimization

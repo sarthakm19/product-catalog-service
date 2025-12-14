@@ -62,7 +62,7 @@ You can customize the database connection using environment variables:
 - `DB_USERNAME` - Database username (default: postgres)
 - `DB_PASSWORD` - Database password (default: password)
 - `JWT_SECRET` - JWT signing secret (required for production)
-- `SERVER_PORT` - Server port (default: 8080)
+- `SERVER_PORT` - Server port (default: 8086)
 - `SHOW_SQL` - Show SQL queries in logs (default: false)
 - `LIQUIBASE_CONTEXTS` - Liquibase contexts to run (default: default)
 
@@ -107,5 +107,5 @@ You can customize the database connection using environment variables:
 ## Monitoring
 
 The application exposes Liquibase information through Spring Boot Actuator:
-- Health check: http://localhost:8080/actuator/health
-- Liquibase info: http://localhost:8080/actuator/liquibase
+- Health check: http://localhost:8086/actuator/health
+- Liquibase info: http://localhost:8086/actuator/liquibase
