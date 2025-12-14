@@ -5,9 +5,8 @@ This project uses **Liquibase** for database schema management and migration.
 ## Database Setup
 
 ### Prerequisites
-- Docker and Docker Compose
-- Java 17+
-- PostgreSQL (or use the provided Docker setup)
+- Java 25 or newer
+- Docker (for PostgreSQL) or local PostgreSQL 13+
 
 ### Quick Start
 
@@ -62,6 +61,8 @@ You can customize the database connection using environment variables:
 
 - `DB_USERNAME` - Database username (default: postgres)
 - `DB_PASSWORD` - Database password (default: password)
+- `JWT_SECRET` - JWT signing secret (required for production)
+- `SERVER_PORT` - Server port (default: 8080)
 - `SHOW_SQL` - Show SQL queries in logs (default: false)
 - `LIQUIBASE_CONTEXTS` - Liquibase contexts to run (default: default)
 

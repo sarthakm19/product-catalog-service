@@ -1,0 +1,147 @@
+{
+  "info": {
+    "_postman_id": "b1e2c3d4-5678-1234-9abc-def012345678",
+    "name": "Product Catalog Service API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "API collection for Product Catalog Service (Spring Boot 4, Java 25). Use with Postman or Bruno."
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "jwtToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": [ "{{baseUrl}}" ], "path": [ "api", "v1", "auth", "login" ] }
+      },
+      "response": []
+    },
+    {
+      "name": "Products - Get All (paginated)",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{jwtToken}}" } ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products?page=0&size=10",
+          "host": [ "{{baseUrl}}" ],
+          "path": [ "api", "v1", "products" ],
+          "query": [
+            { "key": "page", "value": "0" },
+            { "key": "size", "value": "10" }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Products - Get by Code",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{jwtToken}}" } ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products/{{code}}",
+          "host": [ "{{baseUrl}}" ],
+          "path": [ "api", "v1", "products", ":code" ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Products - Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"LAPTOP-001\",\n  \"name\": \"Professional Laptop\",\n  \"description\": \"High-performance laptop for professionals\",\n  \"basePrice\": { \"value\": 1299.99, \"currency\": \"USD\" },\n  \"isInStock\": true,\n  \"stockKeepingUnit\": \"SKU-LAPTOP-001\",\n  \"categoryCode\": \"electronics\",\n  \"catalogCode\": \"main-catalog\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/v1/products", "host": [ "{{baseUrl}}" ], "path": [ "api", "v1", "products" ] }
+      },
+      "response": []
+    },
+    {
+      "name": "Products - Update (PUT)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Updated Laptop\",\n  \"description\": \"Updated description\",\n  \"basePrice\": { \"value\": 1199.99, \"currency\": \"USD\" },\n  \"isInStock\": false,\n  \"stockKeepingUnit\": \"SKU-LAPTOP-001\",\n  \"categoryCode\": \"electronics\",\n  \"catalogCode\": \"main-catalog\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/v1/products/{{code}}", "host": [ "{{baseUrl}}" ], "path": [ "api", "v1", "products", ":code" ] }
+      },
+      "response": []
+    },
+    {
+      "name": "Products - Patch (PATCH)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"isInStock\": false,\n  \"basePrice\": { \"value\": 1099.99, \"currency\": \"USD\" }\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/v1/products/{{code}}", "host": [ "{{baseUrl}}" ], "path": [ "api", "v1", "products", ":code" ] }
+      },
+      "response": []
+    },
+    {
+      "name": "Products - Delete",
+      "request": {
+        "method": "DELETE",
+        "header": [ { "key": "Authorization", "value": "Bearer {{jwtToken}}" } ],
+        "url": { "raw": "{{baseUrl}}/api/v1/products/{{code}}", "host": [ "{{baseUrl}}" ], "path": [ "api", "v1", "products", ":code" ] }
+      },
+      "response": []
+    },
+    {
+      "name": "Products - Batch Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[{\n  \"code\": \"LAPTOP-002\",\n  \"name\": \"Laptop 2\",\n  \"description\": \"Second laptop\",\n  \"basePrice\": { \"value\": 999.99, \"currency\": \"USD\" },\n  \"isInStock\": true,\n  \"stockKeepingUnit\": \"SKU-LAPTOP-002\",\n  \"categoryCode\": \"electronics\",\n  \"catalogCode\": \"main-catalog\"\n}]"
+        },
+        "url": { "raw": "{{baseUrl}}/api/v1/products/batch", "host": [ "{{baseUrl}}" ], "path": [ "api", "v1", "products", "batch" ] }
+      },
+      "response": []
+    },
+    {
+      "name": "Products - Batch Delete",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  \"LAPTOP-001\",\n  \"LAPTOP-002\"\n]"
+        },
+        "url": { "raw": "{{baseUrl}}/api/v1/products/batch", "host": [ "{{baseUrl}}" ], "path": [ "api", "v1", "products", "batch" ] }
+      },
+      "response": []
+    }
+  ]
+}
+

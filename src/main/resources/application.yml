@@ -47,3 +47,18 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidationThatIsLongEnoughToMeetRequirements}
+  expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
+
+# SpringDoc OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+

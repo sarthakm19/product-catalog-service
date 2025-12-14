@@ -1,0 +1,608 @@
+openapi: 3.0.3
+info:
+  title: Product Catalog API
+  description: API for managing product catalog with CRUD operations, pagination, and authentication
+  version: 1.0.0
+  contact:
+    name: Product Catalog Team
+    email: support@productcatalog.com
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Development server
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Products
+    description: Product management operations
+  - name: Authentication
+    description: Authentication operations
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate user and get JWT token
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successfully authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /products:
+    get:
+      tags:
+        - Products
+      summary: Get all products with pagination
+      operationId: getAllProducts
+      parameters:
+        - name: page
+          in: query
+          description: Page number (0-indexed)
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: sort
+          in: query
+          description: Sort field and direction (e.g., name,asc or code,desc)
+          schema:
+            type: string
+            default: code,asc
+        - name: categoryCode
+          in: query
+          description: Filter by category code
+          schema:
+            type: string
+        - name: inStock
+          in: query
+          description: Filter by stock availability
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Successfully retrieved products
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductPageResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Products
+      summary: Create a new product
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Product with code already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /products/batch:
+    post:
+      tags:
+        - Products
+      summary: Create multiple products
+      operationId: createProducts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '201':
+          description: Products created successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Products
+      summary: Delete multiple products by IDs
+      operationId: deleteProducts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+              description: List of product codes to delete
+      responses:
+        '204':
+          description: Products deleted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: One or more products not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /products/{code}:
+    get:
+      tags:
+        - Products
+      summary: Get product by code
+      operationId: getProductByCode
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: Product code
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Products
+      summary: Update product by code
+      operationId: updateProduct
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: Product code
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductRequest'
+      responses:
+        '200':
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    patch:
+      tags:
+        - Products
+      summary: Partially update product by code
+      operationId: patchProduct
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: Product code
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchProductRequest'
+      responses:
+        '200':
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Products
+      summary: Delete product by code
+      operationId: deleteProduct
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: Product code
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Product deleted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: admin
+        password:
+          type: string
+          format: password
+          example: password123
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT access token
+        type:
+          type: string
+          example: Bearer
+        expiresIn:
+          type: integer
+          description: Token expiration time in seconds
+          example: 86400
+
+    CreateProductRequest:
+      type: object
+      required:
+        - code
+        - name
+        - basePrice
+      properties:
+        code:
+          type: string
+          description: Unique product code
+          example: PROD-001
+          minLength: 1
+          maxLength: 50
+        name:
+          type: string
+          description: Product name
+          example: Wireless Mouse
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          description: Product description
+          example: High-quality wireless mouse with ergonomic design
+          maxLength: 1000
+        basePrice:
+          $ref: '#/components/schemas/PriceDto'
+        isInStock:
+          type: boolean
+          description: Stock availability
+          default: true
+        stockKeepingUnit:
+          type: string
+          description: SKU
+          example: WM-001
+          maxLength: 100
+        categoryCode:
+          type: string
+          description: Category code
+          example: CAT-001
+        catalogCode:
+          type: string
+          description: Catalog code
+          example: CAT-MAIN
+
+    UpdateProductRequest:
+      type: object
+      required:
+        - name
+        - basePrice
+      properties:
+        name:
+          type: string
+          description: Product name
+          example: Wireless Mouse
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          description: Product description
+          example: High-quality wireless mouse with ergonomic design
+          maxLength: 1000
+        basePrice:
+          $ref: '#/components/schemas/PriceDto'
+        isInStock:
+          type: boolean
+          description: Stock availability
+        stockKeepingUnit:
+          type: string
+          description: SKU
+          example: WM-001
+          maxLength: 100
+        categoryCode:
+          type: string
+          description: Category code
+          example: CAT-001
+        catalogCode:
+          type: string
+          description: Catalog code
+          example: CAT-MAIN
+
+    PatchProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Product name
+          example: Wireless Mouse
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          description: Product description
+          example: High-quality wireless mouse with ergonomic design
+          maxLength: 1000
+        basePrice:
+          $ref: '#/components/schemas/PriceDto'
+        isInStock:
+          type: boolean
+          description: Stock availability
+        stockKeepingUnit:
+          type: string
+          description: SKU
+          example: WM-001
+          maxLength: 100
+        categoryCode:
+          type: string
+          description: Category code
+          example: CAT-001
+        catalogCode:
+          type: string
+          description: Catalog code
+          example: CAT-MAIN
+
+    ProductResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Unique product code
+          example: PROD-001
+        name:
+          type: string
+          description: Product name
+          example: Wireless Mouse
+        description:
+          type: string
+          description: Product description
+          example: High-quality wireless mouse with ergonomic design
+        basePrice:
+          $ref: '#/components/schemas/PriceDto'
+        isInStock:
+          type: boolean
+          description: Stock availability
+        stockKeepingUnit:
+          type: string
+          description: SKU
+          example: WM-001
+        categoryCode:
+          type: string
+          description: Category code
+          example: CAT-001
+        catalogCode:
+          type: string
+          description: Catalog code
+          example: CAT-MAIN
+
+    PriceDto:
+      type: object
+      required:
+        - value
+        - currency
+      properties:
+        value:
+          type: number
+          format: decimal
+          description: Price value
+          example: 29.99
+          minimum: 0
+        currency:
+          type: string
+          description: Currency code (ISO 4217)
+          example: USD
+          minLength: 3
+          maxLength: 3
+
+    ProductPageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductResponse'
+        page:
+          type: integer
+          description: Current page number
+          example: 0
+        size:
+          type: integer
+          description: Page size
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          description: Total number of products
+          example: 100
+        totalPages:
+          type: integer
+          description: Total number of pages
+          example: 5
+        last:
+          type: boolean
+          description: Whether this is the last page
+          example: false
+
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+        status:
+          type: integer
+          description: HTTP status code
+          example: 400
+        error:
+          type: string
+          description: Error type
+          example: Bad Request
+        message:
+          type: string
+          description: Error message
+          example: Invalid product data
+        path:
+          type: string
+          description: Request path
+          example: /api/v1/products
+
