@@ -10,7 +10,7 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
       JWT_SECRET: ${JWT_SECRET:-your-development-secret-key-change-in-production}
-      SERVER_PORT: 8080
+      SERVER_PORT: 8087
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-default}
     ports:
       - "8087:8087"
@@ -21,7 +21,7 @@ services:
       - product-catalog-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8087/actuator/health"]
       interval: 30s
       timeout: 3s
       retries: 3
