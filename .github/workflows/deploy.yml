@@ -1,0 +1,276 @@
+name: Build and Push to ECR (GitOps with ArgoCD)
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - develop
+    paths:
+      - 'src/**'
+      - 'Dockerfile'
+      - 'build.gradle'
+      - '.github/workflows/deploy.yml'
+  pull_request:
+    branches:
+      - main
+      - staging
+      - develop
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: base-infrastructure-dev-app
+  REGISTRY: 692298411961.dkr.ecr.us-east-1.amazonaws.com/base-infrastructure-dev-app
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    outputs:
+      image-tag: ${{ steps.image.outputs.tag }}
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Build with Gradle
+        run: |
+          chmod +x gradlew
+          ./gradlew clean build -x test --no-daemon
+
+      - name: Run tests
+        run: ./gradlew test --no-daemon
+
+      - name: Generate image tag
+        id: image
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "tag=${{ env.REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest" >> $GITHUB_OUTPUT
+            echo "env=production" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
+            echo "tag=${{ env.REGISTRY }}/${{ env.ECR_REPOSITORY }}:staging-${SHORT_SHA}" >> $GITHUB_OUTPUT
+            echo "env=staging" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${{ env.REGISTRY }}/${{ env.ECR_REPOSITORY }}:dev-${SHORT_SHA}" >> $GITHUB_OUTPUT
+            echo "env=dev" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.image.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ needs.build.outputs.image-tag }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  update-manifest-dev:
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    needs: [build, security-scan]
+    environment: development
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Kustomization with new image tag
+        run: |
+          cd k8s/overlays/dev
+          
+          # Update the image tag in kustomization.yaml
+          yq eval -i '.images[0].newTag = "${{ needs.build.outputs.image-tag }}"' kustomization.yaml
+          
+          # Show the change
+          git diff kustomization.yaml
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          
+          git add k8s/overlays/dev/kustomization.yaml
+          
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(dev): update image to ${{ needs.build.outputs.image-tag }}"
+            git push
+          fi
+
+      - name: Trigger ArgoCD Sync (Optional)
+        if: env.ARGOCD_ENABLED == 'true'
+        run: |
+          # This step is optional - ArgoCD will auto-sync if configured
+          # Requires ARGOCD_SERVER and ARGOCD_AUTH_TOKEN secrets
+          echo "ArgoCD will automatically sync the changes"
+          # Uncomment below if you want to force immediate sync:
+          # argocd app sync product-catalog-dev --server ${{ secrets.ARGOCD_SERVER }} --auth-token ${{ secrets.ARGOCD_AUTH_TOKEN }}
+
+  update-manifest-staging:
+    if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    needs: [build, security-scan]
+    environment: staging
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Kustomization with new image tag
+        run: |
+          cd k8s/overlays/staging
+          
+          # Update the image tag in kustomization.yaml
+          yq eval -i '.images[0].newTag = "${{ needs.build.outputs.image-tag }}"' kustomization.yaml
+          
+          # Show the change
+          git diff kustomization.yaml
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          
+          git add k8s/overlays/staging/kustomization.yaml
+          
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(staging): update image to ${{ needs.build.outputs.image-tag }}"
+            git push
+          fi
+
+      - name: Trigger ArgoCD Sync (Optional)
+        if: env.ARGOCD_ENABLED == 'true'
+        run: |
+          echo "ArgoCD will automatically sync the changes"
+          # Uncomment to force immediate sync:
+          # argocd app sync product-catalog-staging --server ${{ secrets.ARGOCD_SERVER }} --auth-token ${{ secrets.ARGOCD_AUTH_TOKEN }}
+
+  update-manifest-production:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    needs: [build, security-scan]
+    environment: production
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Kustomization with new image tag
+        run: |
+          cd k8s/overlays/production
+          
+          # Update the image tag in kustomization.yaml
+          yq eval -i '.images[0].newTag = "${{ needs.build.outputs.image-tag }}"' kustomization.yaml
+          
+          # Show the change
+          git diff kustomization.yaml
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          
+          git add k8s/overlays/production/kustomization.yaml
+          
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(production): update image to ${{ needs.build.outputs.image-tag }}"
+            git push
+          fi
+
+      - name: Trigger ArgoCD Sync (Optional)
+        if: env.ARGOCD_ENABLED == 'true'
+        run: |
+          echo "ArgoCD will automatically sync the changes"
+          # Uncomment to force immediate sync:
+          # argocd app sync product-catalog --server ${{ secrets.ARGOCD_SERVER }} --auth-token ${{ secrets.ARGOCD_AUTH_TOKEN }}
+
+      - name: Verify ArgoCD Application Status
+        if: env.ARGOCD_ENABLED == 'true'
+        run: |
+          echo "Check ArgoCD application status:"
+          echo "argocd app get product-catalog --server ${{ secrets.ARGOCD_SERVER }} --auth-token ${{ secrets.ARGOCD_AUTH_TOKEN }}"
+
+  notify:
+    if: always()
+    runs-on: ubuntu-latest
+    needs: [build, security-scan, update-manifest-dev, update-manifest-staging, update-manifest-production]
+
+    steps:
+      - name: Deployment Status
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Image built and pushed to ECR successfully"
+            echo "✅ GitOps manifests updated - ArgoCD will sync automatically"
+          else
+            echo "❌ Build or manifest update failed"
+          fi
+
+
+
