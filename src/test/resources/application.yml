@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: product-catalog-service-test
+
+  # Test Database configuration - Using H2 in-memory database
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  # JPA configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Let Liquibase handle schema creation
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  # Liquibase configuration
+  liquibase:
+    change-log: classpath:database/liquibase/db.changelog-master.xml
+    enabled: true
+    drop-first: true
+    default-schema: public
+    contexts: default
+
+# Logging configuration
+logging:
+  level:
+    liquibase: WARN
+    com.product.catalog: INFO
+    org.hibernate.SQL: false
+
+# Server configuration
+server:
+  port: 0  # Random port for tests
+
+# JWT Configuration
+jwt:
+  secret: mySecretKeyForJWTTokenGenerationAndValidationThatIsLongEnoughToMeetRequirements
+  expiration: 86400000 # 24 hours in milliseconds
+
+# SpringDoc OpenAPI Configuration
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+

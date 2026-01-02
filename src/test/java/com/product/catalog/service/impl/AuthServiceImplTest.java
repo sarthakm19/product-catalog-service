@@ -104,8 +104,15 @@ class AuthServiceImplTest {
         // Given
         LoginRequest invalidRequest = new LoginRequest(null, "password");
 
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenThrow(new BadCredentialsException("Username cannot be null"));
+
         // When & Then
-        assertThrows(Exception.class, () -> authService.authenticate(invalidRequest));
+        assertThrows(BadCredentialsException.class, () -> authService.authenticate(invalidRequest));
+
+        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(userDetailsService, never()).loadUserByUsername(anyString());
+        verify(jwtTokenUtil, never()).generateToken(any());
     }
 
     @Test

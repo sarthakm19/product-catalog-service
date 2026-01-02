@@ -1,8 +1,5 @@
 package com.product.catalog.security;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.security.SignatureException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,7 +44,7 @@ class JwtTokenUtilTest {
         // Then
         assertNotNull(token);
         assertFalse(token.isEmpty());
-        assertTrue(token.split("\\.").length == 3); // JWT has 3 parts
+        assertEquals(3, token.split("\\.").length); // JWT has 3 parts
     }
 
     @Test
@@ -188,9 +185,9 @@ class JwtTokenUtilTest {
         // When
         String token1 = jwtTokenUtil.generateToken(userDetails);
 
-        // Small delay to ensure different issuedAt
+        // Wait for at least 1 second to ensure different issuedAt timestamp
         try {
-            Thread.sleep(1);
+            Thread.sleep(1001);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
