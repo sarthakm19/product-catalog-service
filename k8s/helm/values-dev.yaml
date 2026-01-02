@@ -1,0 +1,53 @@
+# Development environment values
+
+replicaCount: 1
+
+image:
+  tag: "dev"
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 15
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 15
+  periodSeconds: 5
+
+ingress:
+  enabled: true
+  hosts:
+    - host: product-catalog-dev.yourdomain.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    enabled: false
+
+app:
+  profiles: kubernetes,dev
+  logging:
+    level:
+      root: DEBUG
+      app: DEBUG
+      hibernate: DEBUG
+
+monitoring:
+  prometheus:
+    enabled: false
+  servicemonitor:
+    enabled: false

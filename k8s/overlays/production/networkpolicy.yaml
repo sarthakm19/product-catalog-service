@@ -1,0 +1,74 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: product-catalog-networkpolicy
+  namespace: product-catalog
+  labels:
+    app: product-catalog
+    environment: production
+spec:
+  podSelector:
+    matchLabels:
+      app: product-catalog
+
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    # Allow from Ingress Controller
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              app: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8087
+
+    # Allow from Load Balancer
+    - from:
+        - namespaceSelector: {}
+        - podSelector:
+            matchLabels:
+              service-type: external
+      ports:
+        - protocol: TCP
+          port: 8087
+
+    # Allow from prometheus
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - protocol: TCP
+          port: 8087
+
+  egress:
+    # Allow DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+
+    # Allow to database
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+
+    # Allow to external services
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+

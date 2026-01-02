@@ -1,0 +1,43 @@
+# Staging environment values
+replicaCount: 2
+
+image:
+  tag: "staging"
+
+resources:
+  limits:
+    cpu: 750m
+    memory: 768Mi
+  requests:
+    cpu: 200m
+    memory: 384Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+
+ingress:
+  enabled: true
+  hosts:
+    - host: product-catalog-staging.yourdomain.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+app:
+  profiles: kubernetes,staging
+  logging:
+    level:
+      root: INFO
+      app: INFO
+      hibernate: WARN
+
+monitoring:
+  prometheus:
+    enabled: true
+  servicemonitor:
+    enabled: true
+  alerts:
+    enabled: false
+

@@ -1,0 +1,61 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: product-catalog-staging
+
+resources:
+  - ../../base
+
+commonLabels:
+  environment: "staging"
+  managed-by: kustomize
+
+commonAnnotations:
+  environment.type: "staging"
+  description: "Staging environment - production-like with fewer replicas"
+
+images:
+  - name: product-catalog
+    newTag: staging
+
+patchesStrategicMerge:
+  - |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: product-catalog
+    spec:
+      replicas: 2
+      template:
+        spec:
+          containers:
+            - name: product-catalog
+              resources:
+                requests:
+                  cpu: "200m"
+                  memory: "384Mi"
+                limits:
+                  cpu: "750m"
+                  memory: "768Mi"
+  - |-
+    apiVersion: autoscaling/v2
+    kind: HorizontalPodAutoscaler
+    metadata:
+      name: product-catalog-hpa
+    spec:
+      minReplicas: 2
+      maxReplicas: 6
+
+patchesJson6902:
+  - target:
+      group: ""
+      version: v1
+      kind: ConfigMap
+      name: product-catalog-config
+    patch: |-
+      - op: replace
+        path: /data/LOGGING_LEVEL_COM_PRODUCT_CATALOG
+        value: INFO
+      - op: replace
+        path: /data/LOGGING_LEVEL_ROOT
+        value: INFO

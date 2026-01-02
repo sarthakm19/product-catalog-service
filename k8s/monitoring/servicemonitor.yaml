@@ -1,0 +1,172 @@
+---
+# ServiceMonitor for Prometheus monitoring
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: product-catalog-monitor
+  namespace: product-catalog
+  labels:
+    app: product-catalog
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: product-catalog
+  endpoints:
+    - port: metrics
+      path: /actuator/prometheus
+      interval: 30s
+      scrapeTimeout: 10s
+      scheme: http
+
+---
+# PrometheusRule for alerting
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: product-catalog-alerts
+  namespace: product-catalog
+  labels:
+    app: product-catalog
+    prometheus: kube-prometheus
+spec:
+  groups:
+    - name: product-catalog
+      interval: 30s
+      rules:
+        # Pod availability alert
+        - alert: ProductCatalogPodDown
+          expr: |
+            count(kube_pod_status_phase{namespace="product-catalog", pod=~"product-catalog.*", phase="Running"}) < 2
+          for: 5m
+          labels:
+            severity: critical
+            service: product-catalog
+          annotations:
+            summary: "Product Catalog pod is down"
+            description: "Less than 2 Product Catalog pods are running"
+
+        # High CPU usage alert
+        - alert: ProductCatalogHighCPU
+          expr: |
+            sum(rate(container_cpu_usage_seconds_total{namespace="product-catalog", pod=~"product-catalog.*"}[5m])) > 0.8
+          for: 10m
+          labels:
+            severity: warning
+            service: product-catalog
+          annotations:
+            summary: "Product Catalog high CPU usage"
+            description: "CPU usage is above 80%"
+
+        # High memory usage alert
+        - alert: ProductCatalogHighMemory
+          expr: |
+            sum(container_memory_usage_bytes{namespace="product-catalog", pod=~"product-catalog.*"}) / sum(container_spec_memory_limit_bytes{namespace="product-catalog", pod=~"product-catalog.*"}) > 0.85
+          for: 10m
+          labels:
+            severity: warning
+            service: product-catalog
+          annotations:
+            summary: "Product Catalog high memory usage"
+            description: "Memory usage is above 85%"
+
+        # HTTP error rate alert
+        - alert: ProductCatalogHighErrorRate
+          expr: |
+            sum(rate(http_requests_total{namespace="product-catalog", job="product-catalog", status=~"5.."}[5m])) / sum(rate(http_requests_total{namespace="product-catalog", job="product-catalog"}[5m])) > 0.05
+          for: 5m
+          labels:
+            severity: critical
+            service: product-catalog
+          annotations:
+            summary: "Product Catalog high error rate"
+            description: "Error rate is above 5%"
+
+        # Response time alert
+        - alert: ProductCatalogSlowResponse
+          expr: |
+            histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{namespace="product-catalog", job="product-catalog"}[5m])) by (le)) > 2
+          for: 10m
+          labels:
+            severity: warning
+            service: product-catalog
+          annotations:
+            summary: "Product Catalog slow response time"
+            description: "95th percentile response time is above 2 seconds"
+
+        # Database connection pool alert
+        - alert: ProductCatalogDBConnectionPoolHigh
+          expr: |
+            db_connection_pool_usage{namespace="product-catalog", pod=~"product-catalog.*"} > 0.8
+          for: 5m
+          labels:
+            severity: warning
+            service: product-catalog
+          annotations:
+            summary: "Product Catalog database connection pool high"
+            description: "Database connection pool usage is above 80%"
+
+        # Pod restart alert
+        - alert: ProductCatalogPodRestarting
+          expr: |
+            rate(kube_pod_container_status_restarts_total{namespace="product-catalog", pod=~"product-catalog.*"}[15m]) > 0
+          for: 5m
+          labels:
+            severity: warning
+            service: product-catalog
+          annotations:
+            summary: "Product Catalog pod is restarting"
+            description: "Pod has restarted in the last 15 minutes"
+
+---
+# ConfigMap for Grafana Dashboard
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: product-catalog-dashboard
+  namespace: product-catalog
+  labels:
+    app: product-catalog
+    grafana_dashboard: "1"
+data:
+  product-catalog-dashboard.json: |
+    {
+      "dashboard": {
+        "title": "Product Catalog Service Metrics",
+        "panels": [
+          {
+            "title": "Pod Count",
+            "targets": [
+              {
+                "expr": "count(kube_pod_status_phase{namespace=\"product-catalog\", pod=~\"product-catalog.*\", phase=\"Running\"})"
+              }
+            ]
+          },
+          {
+            "title": "CPU Usage",
+            "targets": [
+              {
+                "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"product-catalog\", pod=~\"product-catalog.*\"}[5m])) by (pod)"
+              }
+            ]
+          },
+          {
+            "title": "Memory Usage",
+            "targets": [
+              {
+                "expr": "sum(container_memory_usage_bytes{namespace=\"product-catalog\", pod=~\"product-catalog.*\"}) by (pod)"
+              }
+            ]
+          },
+          {
+            "title": "HTTP Request Rate",
+            "targets": [
+              {
+                "expr": "sum(rate(http_requests_total{namespace=\"product-catalog\", job=\"product-catalog\"}[5m])) by (status)"
+              }
+            ]
+          }
+        ]
+      }
+    }
+

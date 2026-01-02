@@ -1,0 +1,146 @@
+---
+# Service Account for the Product Catalog Service
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: product-catalog
+  namespace: product-catalog
+  labels:
+    app: product-catalog
+  annotations:
+    description: "Service account for Product Catalog Service pods"
+
+---
+# ClusterRole with minimal required permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: product-catalog-role
+  labels:
+    app: product-catalog
+rules:
+  # Allow reading configmaps and secrets
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+  # Allow reading service account
+  - apiGroups: [""]
+    resources: ["serviceaccounts"]
+    verbs: ["get"]
+  # Allow accessing pod information for service discovery
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  # Allow reading services
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "watch"]
+  # Allow reading endpoints
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["get", "list", "watch"]
+
+---
+# ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: product-catalog-role-binding
+  labels:
+    app: product-catalog
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: product-catalog-role
+subjects:
+  - kind: ServiceAccount
+    name: product-catalog
+    namespace: product-catalog
+
+---
+# Role for namespace-specific operations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: product-catalog-ns-role
+  namespace: product-catalog
+  labels:
+    app: product-catalog
+rules:
+  # Allow pod logs and debugging
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
+  # Allow port forwarding
+  - apiGroups: [""]
+    resources: ["pods/portforward"]
+    verbs: ["create", "list", "watch"]
+
+---
+# RoleBinding for namespace-specific role
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: product-catalog-ns-role-binding
+  namespace: product-catalog
+  labels:
+    app: product-catalog
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: product-catalog-ns-role
+subjects:
+  - kind: ServiceAccount
+    name: product-catalog
+    namespace: product-catalog
+
+---
+# NetworkPolicy for egress to external DNS and API services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: product-catalog-allow-external
+  namespace: product-catalog
+  labels:
+    app: product-catalog
+spec:
+  podSelector:
+    matchLabels:
+      app: product-catalog
+  policyTypes:
+    - Egress
+  egress:
+    # Allow DNS queries to kube-dns
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow traffic to PostgreSQL database
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 5432
+    # Allow traffic to external APIs (AWS services, etc.)
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+    # Allow traffic within the pod's namespace
+    - to:
+        - podSelector: {}
+

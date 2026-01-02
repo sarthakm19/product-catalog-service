@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: product-catalog
+  labels:
+    name: product-catalog
+    managed-by: kustomize
+  annotations:
+    description: "Namespace for Product Catalog Service"
+    environment: "kubernetes"
+

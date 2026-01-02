@@ -1,0 +1,84 @@
+  apiVersion: kustomize.config.k8s.io/v1beta1
+  kind: Kustomization
+
+  namespace: product-catalog-dev
+
+  resources:
+    - ../../base
+
+  images:
+    - name: product-catalog
+      newTag: dev
+
+  patchesStrategicMerge:
+    # Set replica count and tune deployment resources/probes for dev
+    - |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: product-catalog
+      spec:
+        replicas: 1
+        template:
+          spec:
+            containers:
+              - name: product-catalog
+                resources:
+                  requests:
+                    cpu: "100m"
+                    memory: "256Mi"
+                  limits:
+                    cpu: "500m"
+                    memory: "512Mi"
+                livenessProbe:
+                  httpGet:
+                    path: /actuator/health/liveness
+                    port: http
+                  initialDelaySeconds: 30
+                  periodSeconds: 15
+                readinessProbe:
+                  httpGet:
+                    path: /actuator/health/readiness
+                    port: http
+                  initialDelaySeconds: 15
+                  periodSeconds: 5
+    # Loosen HPA thresholds for dev testing
+    - |-
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: product-catalog-hpa
+      spec:
+        minReplicas: 1
+        maxReplicas: 3
+        metrics:
+          - type: Resource
+            resource:
+              name: cpu
+              target:
+                type: Utilization
+                averageUtilization: 70
+          - type: Resource
+            resource:
+              name: memory
+              target:
+                type: Utilization
+                averageUtilization: 80
+
+  patchesJson6902:
+    # Enable verbose logging and SQL show for dev via ConfigMap
+    - target:
+        group: ""
+        version: v1
+        kind: ConfigMap
+        name: product-catalog-config
+      patch: |-
+        - op: replace
+          path: /data/SPRING_JPA_SHOW_SQL
+          value: "true"
+        - op: replace
+          path: /data/LOGGING_LEVEL_ORG_HIBERNATE_SQL
+          value: "DEBUG"
+        - op: replace
+          path: /data/LOGGING_LEVEL_COM_PRODUCT_CATALOG
+          value: "DEBUG"

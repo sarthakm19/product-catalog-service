@@ -1,0 +1,113 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: product-catalog-config
+  namespace: product-catalog
+  labels:
+    app: product-catalog
+    config-type: application
+data:
+  # Spring Boot Configuration
+  SPRING_PROFILES_ACTIVE: "kubernetes"
+  SERVER_PORT: "8087"
+  SPRING_APPLICATION_NAME: "product-catalog-service"
+
+  # Database Configuration
+  SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "20"
+  SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "5"
+  SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: "20000"
+  SPRING_DATASOURCE_HIKARI_IDLE_TIMEOUT: "300000"
+
+  # JPA/Hibernate Configuration
+  SPRING_JPA_SHOW_SQL: "false"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "validate"
+  SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: "org.hibernate.dialect.PostgreSQLDialect"
+  SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "true"
+  SPRING_JPA_PROPERTIES_HIBERNATE_USE_SQL_COMMENTS: "true"
+
+  # Liquibase Configuration
+  SPRING_LIQUIBASE_ENABLED: "true"
+  SPRING_LIQUIBASE_CHANGE_LOG: "classpath:database/liquibase/db.changelog-master.xml"
+  SPRING_LIQUIBASE_CONTEXTS: "default"
+
+  # Logging Configuration
+  LOGGING_LEVEL_ROOT: "INFO"
+  LOGGING_LEVEL_COM_PRODUCT_CATALOG: "INFO"
+  LOGGING_LEVEL_LIQUIBASE: "INFO"
+  LOGGING_LEVEL_ORG_HIBERNATE_SQL: "WARN"
+  LOGGING_PATTERN_CONSOLE: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
+  LOGGING_PATTERN_FILE: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+  # JWT Configuration
+  JWT_EXPIRATION: "86400000"  # 24 hours in milliseconds
+
+  # Management and Monitoring
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,metrics,prometheus"
+  MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: "when-authorized"
+  MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED: "true"
+
+  # OpenAPI/Swagger Configuration
+  SPRINGDOC_API_DOCS_PATH: "/v3/api-docs"
+  SPRINGDOC_SWAGGER_UI_PATH: "/swagger-ui.html"
+  SPRINGDOC_SWAGGER_UI_OPERATIONS_SORTER: "method"
+  SPRINGDOC_SWAGGER_UI_TAGS_SORTER: "alpha"
+  SPRINGDOC_SWAGGER_UI_ENABLED: "true"
+
+  # HTTP Connection Pool
+  SPRING_DATASOURCE_HIKARI_AUTO_COMMIT: "true"
+  SPRING_DATASOURCE_HIKARI_LEAK_DETECTION_THRESHOLD: "30000"
+
+  # Performance Tuning
+  SERVER_TOMCAT_THREADS_MAX: "200"
+  SERVER_TOMCAT_THREADS_MIN_SPARE: "10"
+  SERVER_TOMCAT_ACCEPT_COUNT: "100"
+  SERVER_TOMCAT_MAX_CONNECTIONS: "10000"
+
+  # Shutdown Configuration
+  SERVER_SHUTDOWN: "graceful"
+  SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: "30s"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: product-catalog-logging
+  namespace: product-catalog
+  labels:
+    app: product-catalog
+    config-type: logging
+data:
+  logback-spring.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <configuration>
+      <property name="LOG_FILE" value="/var/log/application.log"/>
+      <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"/>
+      
+      <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+          <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+      </appender>
+      
+      <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}</file>
+        <encoder>
+          <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+          <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+          <maxFileSize>10MB</maxFileSize>
+          <maxHistory>30</maxHistory>
+        </rollingPolicy>
+      </appender>
+      
+      <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+      </root>
+      
+      <logger name="com.product.catalog" level="INFO"/>
+      <logger name="org.springframework.boot" level="INFO"/>
+      <logger name="org.hibernate.SQL" level="WARN"/>
+    </configuration>
+

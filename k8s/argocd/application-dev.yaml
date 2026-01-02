@@ -1,0 +1,28 @@
+---
+# ArgoCD Application for development
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: product-catalog-dev
+  namespace: argocd
+  labels:
+    app: product-catalog
+    environment: dev
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/your-org/product-catalog.git
+    targetRevision: develop
+    path: k8s/overlays/dev
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: product-catalog-dev
+
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 3
+

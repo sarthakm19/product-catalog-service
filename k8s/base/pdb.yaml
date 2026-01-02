@@ -1,0 +1,23 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: product-catalog-pdb
+  namespace: product-catalog
+  labels:
+    app: product-catalog
+  annotations:
+    description: "Pod Disruption Budget for Product Catalog Service"
+spec:
+  # Ensure minimum availability during disruptions
+  minAvailable: 2
+
+  # Alternative: use maxUnavailable
+  # maxUnavailable: 1
+
+  selector:
+    matchLabels:
+      app: product-catalog
+
+  # Unhealthiness threshold for PDB
+  unhealthyPodEvictionPolicy: AlwaysAllow
+
