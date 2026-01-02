@@ -15,52 +15,61 @@ commonAnnotations:
 images:
   - name: product-catalog
     newTag: 692298411961.dkr.ecr.us-east-1.amazonaws.com/base-infrastructure-dev-app:latest
-patchesStrategicMerge:
-  - |-
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: product-catalog
-    spec:
-      replicas: 3
-      template:
-        spec:
-          containers:
-            - name: product-catalog
-              resources:
-                requests:
-                  cpu: "500m"
-                  memory: "768Mi"
-                limits:
-                  cpu: "1500m"
-                  memory: "1024Mi"
-              livenessProbe:
-                initialDelaySeconds: 90
-                periodSeconds: 10
-                failureThreshold: 5
-              readinessProbe:
-                initialDelaySeconds: 45
-                periodSeconds: 5
-                failureThreshold: 3
-  - |-
-    apiVersion: autoscaling/v2
-    kind: HorizontalPodAutoscaler
-    metadata:
-      name: product-catalog-hpa
-    spec:
-      minReplicas: 3
-      maxReplicas: 10
-  - |-
-    apiVersion: policy/v1
-    kind: PodDisruptionBudget
-    metadata:
-      name: product-catalog-pdb
-    spec:
-      minAvailable: 2
-patchesJson6902:
+patches:
   - target:
-      group: ""
-      version: v1
+      kind: Deployment
+      name: product-catalog
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: product-catalog
+        namespace: product-catalog
+      spec:
+        replicas: 3
+        template:
+          spec:
+            containers:
+              - name: product-catalog
+                resources:
+                  requests:
+                    cpu: "500m"
+                    memory: "768Mi"
+                  limits:
+                    cpu: "1500m"
+                    memory: "1024Mi"
+                livenessProbe:
+                  initialDelaySeconds: 90
+                  periodSeconds: 10
+                  failureThreshold: 5
+                readinessProbe:
+                  initialDelaySeconds: 45
+                  periodSeconds: 5
+                  failureThreshold: 3
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: product-catalog-hpa
+    patch: |-
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: product-catalog-hpa
+        namespace: product-catalog
+      spec:
+        minReplicas: 3
+        maxReplicas: 10
+  - target:
+      kind: PodDisruptionBudget
+      name: product-catalog-pdb
+    patch: |-
+      apiVersion: policy/v1
+      kind: PodDisruptionBudget
+      metadata:
+        name: product-catalog-pdb
+        namespace: product-catalog
+      spec:
+        minAvailable: 2
+  - target:
       kind: ConfigMap
       name: product-catalog-config
     patch: |-

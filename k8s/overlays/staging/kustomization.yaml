@@ -18,38 +18,42 @@ images:
   - name: product-catalog
     newTag: staging
 
-patchesStrategicMerge:
-  - |-
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: product-catalog
-    spec:
-      replicas: 2
-      template:
-        spec:
-          containers:
-            - name: product-catalog
-              resources:
-                requests:
-                  cpu: "200m"
-                  memory: "384Mi"
-                limits:
-                  cpu: "750m"
-                  memory: "768Mi"
-  - |-
-    apiVersion: autoscaling/v2
-    kind: HorizontalPodAutoscaler
-    metadata:
-      name: product-catalog-hpa
-    spec:
-      minReplicas: 2
-      maxReplicas: 6
-
-patchesJson6902:
+patches:
   - target:
-      group: ""
-      version: v1
+      kind: Deployment
+      name: product-catalog
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: product-catalog
+        namespace: product-catalog-staging
+      spec:
+        replicas: 2
+        template:
+          spec:
+            containers:
+              - name: product-catalog
+                resources:
+                  requests:
+                    cpu: "200m"
+                    memory: "384Mi"
+                  limits:
+                    cpu: "750m"
+                    memory: "768Mi"
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: product-catalog-hpa
+    patch: |-
+      apiVersion: autoscaling/v2
+      kind: HorizontalPodAutoscaler
+      metadata:
+        name: product-catalog-hpa
+        namespace: product-catalog-staging
+      spec:
+        minReplicas: 2
+        maxReplicas: 6
+  - target:
       kind: ConfigMap
       name: product-catalog-config
     patch: |-
