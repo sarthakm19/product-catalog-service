@@ -20,7 +20,7 @@ on:
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: base-infrastructure-dev-app
-  REGISTRY: 692298411961.dkr.ecr.us-east-1.amazonaws.com/base-infrastructure-dev-app
+  REGISTRY: 692298411961.dkr.ecr.us-east-1.amazonaws.com
 
 jobs:
   build:
