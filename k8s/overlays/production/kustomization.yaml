@@ -1,26 +1,20 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
 namespace: product-catalog
-
 resources:
   - ../../base
   - networkpolicy.yaml
   - podsecuritypolicy.yaml
   - priorityclass.yaml
-
 commonLabels:
   environment: "production"
   managed-by: kustomize
-
 commonAnnotations:
   environment.type: "production"
   description: "Production environment - strict resource limits and security"
-
 images:
   - name: product-catalog
-    newTag: latest
-
+    newTag: 692298411961.dkr.ecr.us-east-1.amazonaws.com/base-infrastructure-dev-app:latest
 patchesStrategicMerge:
   - |-
     apiVersion: apps/v1
@@ -63,7 +57,6 @@ patchesStrategicMerge:
       name: product-catalog-pdb
     spec:
       minAvailable: 2
-
 patchesJson6902:
   - target:
       group: ""
@@ -83,4 +76,3 @@ patchesJson6902:
       - op: replace
         path: /data/SPRING_JPA_SHOW_SQL
         value: "false"
-
