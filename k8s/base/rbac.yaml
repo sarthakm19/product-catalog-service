@@ -9,6 +9,8 @@ metadata:
     app: product-catalog
   annotations:
     description: "Service account for Product Catalog Service pods"
+    # For ECR access, uncomment and configure IRSA:
+    # eks.amazonaws.com/role-arn: arn:aws:iam::692298411961:role/product-catalog-ecr-role
 
 ---
 # ClusterRole with minimal required permissions
