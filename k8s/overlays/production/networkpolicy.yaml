@@ -1,7 +1,8 @@
+---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: product-catalog-networkpolicy
+  name: product-catalog-ingress
   namespace: product-catalog
   labels:
     app: product-catalog
@@ -10,51 +11,54 @@ spec:
   podSelector:
     matchLabels:
       app: product-catalog
-
   policyTypes:
     - Ingress
-    - Egress
-
   ingress:
-    # Allow from Ingress Controller
     - from:
         - namespaceSelector:
             matchLabels:
-              app: ingress-nginx
-      ports:
-        - protocol: TCP
-          port: 8087
-
-    # Allow from Load Balancer
-    - from:
-        - namespaceSelector: {}
-        - podSelector:
-            matchLabels:
-              service-type: external
-      ports:
-        - protocol: TCP
-          port: 8087
-
-    # Allow from prometheus
-    - from:
+              name: ingress-nginx
         - namespaceSelector:
             matchLabels:
-              app: prometheus
+              name: istio-system
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+        - namespaceSelector:
+            matchLabels:
+              name: api-gateway
+        - podSelector: {}
       ports:
         - protocol: TCP
           port: 8087
-
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: product-catalog-egress
+  namespace: product-catalog
+  labels:
+    app: product-catalog
+    environment: production
+spec:
+  podSelector:
+    matchLabels:
+      app: product-catalog
+  policyTypes:
+    - Egress
   egress:
-    # Allow DNS
     - to:
-        - namespaceSelector:
-            matchLabels:
-              name: kube-system
+        - podSelector: {}
       ports:
-        - protocol: UDP
-          port: 53
-
-    # Allow to database
+        - protocol: TCP
+          port: 8087
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443
     - to:
         - podSelector:
             matchLabels:
@@ -62,13 +66,19 @@ spec:
       ports:
         - protocol: TCP
           port: 5432
-
-    # Allow to external services
     - to:
-        - namespaceSelector: {}
+        - podSelector:
+            matchLabels:
+              app: redis
       ports:
         - protocol: TCP
-          port: 443
+          port: 6379
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+      ports:
         - protocol: TCP
-          port: 80
-
+          port: 53
+        - protocol: UDP
+          port: 53

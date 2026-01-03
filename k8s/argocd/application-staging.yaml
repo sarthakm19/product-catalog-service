@@ -1,36 +1,36 @@
 ---
-        maxDuration: 3m
-        factor: 2
-        duration: 5s
-      backoff:
-      limit: 3
-    retry:
-      - CreateNamespace=true
-    syncOptions:
-      allowEmpty: false
-      selfHeal: true
-      prune: false
-    automated:
-  syncPolicy:
-
-    namespace: product-catalog-staging
-    server: https://kubernetes.default.svc
-  destination:
-
-    path: k8s/overlays/staging
-    targetRevision: staging
-    repoURL: https://github.com/your-org/product-catalog.git
-  source:
-
-  project: default
-spec:
-    environment: staging
-    app: product-catalog
-  labels:
-  namespace: argocd
-  name: product-catalog-staging
-metadata:
-kind: Application
-apiVersion: argoproj.io/v1alpha1
 # ArgoCD Application for staging
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: product-catalog-staging
+  namespace: argocd
+  labels:
+    app: product-catalog
+    environment: staging
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/sarthakm19/product-catalog-service.git
+    targetRevision: staging
+    path: k8s/overlays/staging
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: product-catalog-staging
+
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
 

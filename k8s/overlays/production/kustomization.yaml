@@ -4,7 +4,6 @@ namespace: product-catalog
 resources:
   - ../../base
   - networkpolicy.yaml
-  - podsecuritypolicy.yaml
   - priorityclass.yaml
 commonLabels:
   environment: "production"
