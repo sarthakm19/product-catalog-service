@@ -77,7 +77,7 @@ spec:
       # Main application container
       containers:
         - name: product-catalog
-          image: your-aws-account.dkr.ecr.region.amazonaws.com/product-catalog:latest
+          image: product-catalog:latest
           imagePullPolicy: IfNotPresent
 
           # Container ports

@@ -13,7 +13,8 @@ commonAnnotations:
   description: "Production environment - strict resource limits and security"
 images:
   - name: product-catalog
-    newTag: 692298411961.dkr.ecr.us-east-1.amazonaws.com/base-infrastructure-dev-app:latest
+    newName: 692298411961.dkr.ecr.us-east-1.amazonaws.com/base-infrastructure-dev-app
+    newTag: latest
 patches:
   - target:
       kind: Deployment
