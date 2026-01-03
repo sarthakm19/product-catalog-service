@@ -12,7 +12,7 @@ spring:
   # JPA configuration
   jpa:
     hibernate:
-      ddl-auto: validate  # Let Liquibase handle schema creation
+      ddl-auto: none  # Let Liquibase handle schema creation completely
     show-sql: ${SHOW_SQL:false}
     properties:
       hibernate:
@@ -23,7 +23,7 @@ spring:
   liquibase:
     change-log: classpath:database/liquibase/db.changelog-master.xml
     enabled: true
-    drop-first: true
+    drop-first: false
     default-schema: public
     contexts: ${LIQUIBASE_CONTEXTS:default}
 
@@ -43,10 +43,18 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,liquibase
+        include: health,info,liquibase,metrics,prometheus
+      base-path: /actuator
   endpoint:
     health:
-      show-details: when-authorized
+      show-details: always
+      probes:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
 
 # JWT Configuration
 jwt:
