@@ -52,27 +52,9 @@ spec:
             value: "2"
           - name: edns0
 
-      # Init containers for database migration readiness
-      initContainers:
-        - name: wait-for-db
-          image: busybox:latest
-          imagePullPolicy: IfNotPresent
-          command: ['sh', '-c']
-          args:
-            - >
-              until nc -z postgres.product-catalog.svc.cluster.local 5432 2>/dev/null; do
-                echo "Waiting for PostgreSQL to be ready...";
-                sleep 2;
-              done;
-              echo "PostgreSQL is ready!"
-          securityContext:
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
+      # Note: No init container needed for AWS RDS
+      # RDS is a managed service that's always available
+      # Spring Boot's HikariCP will handle connection retries automatically
 
       # Main application container
       containers:
