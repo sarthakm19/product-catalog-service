@@ -27,7 +27,7 @@ data:
 
   # JPA/Hibernate Configuration
   SPRING_JPA_SHOW_SQL: "false"
-  SPRING_JPA_HIBERNATE_DDL_AUTO: "validate"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "none"
   SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: "org.hibernate.dialect.PostgreSQLDialect"
   SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "true"
   SPRING_JPA_PROPERTIES_HIBERNATE_USE_SQL_COMMENTS: "true"
@@ -36,6 +36,7 @@ data:
   SPRING_LIQUIBASE_ENABLED: "true"
   SPRING_LIQUIBASE_CHANGE_LOG: "classpath:database/liquibase/db.changelog-master.xml"
   SPRING_LIQUIBASE_CONTEXTS: "default"
+  SPRING_LIQUIBASE_DROP_FIRST: "false"
 
   # Logging Configuration
   LOGGING_LEVEL_ROOT: "INFO"

@@ -154,11 +154,11 @@ spec:
               path: /actuator/health
               port: http
               scheme: HTTP
-            initialDelaySeconds: 0
-            periodSeconds: 3
+            initialDelaySeconds: 10
+            periodSeconds: 5
             timeoutSeconds: 3
             successThreshold: 1
-            failureThreshold: 30
+            failureThreshold: 40  # Allow up to 200 seconds for startup (40 * 5)
 
           # Container security context
           securityContext:
