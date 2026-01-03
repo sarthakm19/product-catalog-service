@@ -31,8 +31,7 @@ readinessProbe:
 ingress:
   enabled: true
   hosts:
-    - host: product-catalog-dev.yourdomain.com
-      paths:
+    - paths:
         - path: /
           pathType: Prefix
   tls:

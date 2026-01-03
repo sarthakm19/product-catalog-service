@@ -19,11 +19,14 @@ autoscaling:
 
 ingress:
   enabled: true
+  annotations:
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
   hosts:
-    - host: product-catalog-staging.yourdomain.com
-      paths:
+    - paths:
         - path: /
           pathType: Prefix
+  tls:
+    enabled: false
 
 app:
   profiles: kubernetes,staging

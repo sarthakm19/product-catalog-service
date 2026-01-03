@@ -54,14 +54,13 @@ ingress:
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
   hosts:
-    - host: product-catalog.yourdomain.com
-      paths:
+    - paths:
         - path: /
           pathType: Prefix
   tls:
-    enabled: true
-    certificateArn: arn:aws:acm:region:account-id:certificate/certificate-id
+    enabled: false
 
 resources:
   limits:

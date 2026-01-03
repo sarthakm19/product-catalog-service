@@ -5,6 +5,7 @@ namespace: product-catalog-staging
 
 resources:
   - ../../base
+  - ../../ingress
 
 commonLabels:
   environment: "staging"

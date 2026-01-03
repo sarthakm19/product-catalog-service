@@ -5,6 +5,7 @@
 
   resources:
     - ../../base
+    - ../../ingress
 
   images:
     - name: product-catalog

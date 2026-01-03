@@ -32,15 +32,13 @@ ingress:
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
   hosts:
-    - host: product-catalog.yourdomain.com
-      paths:
+    - paths:
         - path: /
           pathType: Prefix
   tls:
-    enabled: true
-    certificateArn: arn:aws:acm:us-east-1:ACCOUNT_ID:certificate/CERTIFICATE_ID
+    enabled: false
 
 livenessProbe:
   initialDelaySeconds: 90

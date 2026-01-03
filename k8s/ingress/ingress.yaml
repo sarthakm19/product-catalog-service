@@ -12,12 +12,12 @@ metadata:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
     alb.ingress.kubernetes.io/healthcheck-path: /actuator/health
 spec:
   ingressClassName: alb
   rules:
-    - host: product-catalog-dev.yourdomain.com
-      http:
+    - http:
         paths:
           - path: /
             pathType: Prefix
@@ -40,12 +40,12 @@ metadata:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
     alb.ingress.kubernetes.io/healthcheck-path: /actuator/health
 spec:
   ingressClassName: alb
   rules:
-    - host: product-catalog-staging.yourdomain.com
-      http:
+    - http:
         paths:
           - path: /
             pathType: Prefix
@@ -68,14 +68,12 @@ metadata:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:region:account-id:certificate/certificate-id
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
     alb.ingress.kubernetes.io/healthcheck-path: /actuator/health
 spec:
   ingressClassName: alb
   rules:
-    - host: product-catalog.yourdomain.com
-      http:
+    - http:
         paths:
           - path: /
             pathType: Prefix
