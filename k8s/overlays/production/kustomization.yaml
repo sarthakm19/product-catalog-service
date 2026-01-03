@@ -3,7 +3,6 @@ kind: Kustomization
 namespace: product-catalog
 resources:
   - ../../base
-  - ../../ingress
   - networkpolicy.yaml
   - priorityclass.yaml
 commonLabels:
