@@ -14,7 +14,7 @@ commonAnnotations:
 images:
   - name: product-catalog
     newName: 692298411961.dkr.ecr.us-east-1.amazonaws.com/base-infrastructure-dev-app
-    newTag: 692298411961.dkr.ecr.us-east-1.amazonaws.com/base-infrastructure-dev-app:latest
+    newTag: latest
 patches:
   - target:
       kind: Deployment
