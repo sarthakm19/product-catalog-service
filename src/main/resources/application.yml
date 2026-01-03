@@ -36,7 +36,7 @@ logging:
 
 # Server configuration
 server:
-  port: ${SERVER_PORT:8086}
+  port: ${SERVER_PORT:8087}
 
 # Management endpoints for monitoring
 management:
