@@ -5,6 +5,7 @@
 
   resources:
     - ../../base
+    - ingress.yaml
 
   images:
     - name: product-catalog

@@ -5,6 +5,7 @@ resources:
   - ../../base
   - networkpolicy.yaml
   - priorityclass.yaml
+  - ingress.yaml
 commonLabels:
   environment: "production"
   managed-by: kustomize
