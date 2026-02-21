@@ -4,6 +4,8 @@
 
 This project uses ArgoCD for GitOps-based continuous deployment. Each environment (dev, staging, production) has its own ArgoCD Application that monitors the Git repository and automatically syncs changes to the Kubernetes cluster.
 
+> **📌 Important:** Each ArgoCD application now manages all resources for its environment, including ingress. The separate `product-catalog-ingress` application has been removed. See [INGRESS_REORGANIZATION_COMPLETE.md](../../INGRESS_REORGANIZATION_COMPLETE.md) for details.
+
 ## Architecture
 
 ```

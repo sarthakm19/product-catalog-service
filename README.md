@@ -1,304 +1,166 @@
-# Product Catalog Service - API Documentation
+# Product Catalog Service
 
-## Overview
+A production-ready Product Catalog microservice built with **Spring Boot 4.0.0** and **Java 25**, deployed to **AWS EKS** via **ArgoCD GitOps**. Provides REST APIs for managing products with CRUD operations, pagination, filtering, JWT security, and Liquibase-managed schema.
 
-This is a comprehensive Product Catalog Service built using **Spring Boot 4.0.0** and **Java 25**, following **API-driven development** and **clean architecture** principles. The service provides REST APIs for managing products with full CRUD operations, pagination, filtering, and JWT-based security.
+---
 
-## Architecture
+## Documentation Map
 
-### Layered Architecture
+| Document | Description |
+|----------|-------------|
+| **[README.md](README.md)** (this file) | Overview, API reference, quick start |
+| **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** | Application + infrastructure architecture, design patterns |
+| **[AUTHENTICATION.md](docs/AUTHENTICATION.md)** | JWT auth flow, endpoints, security configuration |
+| **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** | Docker → Kubernetes → GitOps deployment guide |
+| **[docs/DATABASE.md](docs/DATABASE.md)** | Liquibase, RDS config, HikariCP, entity model |
+| **[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** | Symptom-indexed runbook for all known issues |
+| **[k8s/README.md](k8s/README.md)** | Kubernetes manifest reference and file index |
 
-The application follows a clean, layered architecture pattern:
+---
 
-```
-┌─────────────────────────────────────┐
-│         Controller Layer            │  ← DTOs for API requests/responses
-├─────────────────────────────────────┤
-│         Service Layer               │  ← Domain models for business logic
-├─────────────────────────────────────┤
-│         Repository Layer            │  ← Entities for database
-└─────────────────────────────────────┘
-```
+## Quick Start
 
-### Key Design Patterns
+### Option A: Docker Compose
 
-1. **API-First Development**: OpenAPI specification defines the contract
-2. **DTO Pattern**: Separate DTOs for API layer
-3. **Domain Model Pattern**: Business logic operates on domain models
-4. **Entity Pattern**: JPA entities for persistence
-5. **Mapper Pattern**: MapStruct for layer-to-layer conversions
-6. **Repository Pattern**: Spring Data JPA repositories
-7. **Service Pattern**: Business logic encapsulation
-8. **Strategy Pattern**: For authentication and authorization
-
-### Package Structure
-
-```
-com.product.catalog/
-├── config/              # Configuration classes (OpenAPI, etc.)
-├── controller/          # REST controllers (API layer)
-├── dto/                 # Data Transfer Objects (API contracts)
-├── domain/              # Domain models (business logic)
-├── entity/              # JPA entities (persistence layer)
-├── exception/           # Custom exceptions and global handler
-├── mapper/              # MapStruct mappers
-├── repository/          # Spring Data repositories
-├── security/            # JWT security configuration
-└── service/             # Business logic services
-    └── impl/            # Service implementations
+```bash
+docker-compose up -d --build
+# App: http://localhost:8087/swagger-ui.html
 ```
 
-## Features
+### Option B: Local Development
 
-### Core Features
+```bash
+# 1. Start database
+docker run --name product-catalog-db \
+  -e POSTGRES_DB=product_catalog_db -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres:15
 
-- ✅ **CRUD Operations**: Create, Read, Update, Delete products
-- ✅ **Batch Operations**: Create/delete multiple products
-- ✅ **Pagination**: Efficient data retrieval with pagination
-- ✅ **Filtering**: Filter by category, stock status
-- ✅ **Sorting**: Sort by any field (asc/desc)
-- ✅ **JWT Authentication**: Secure API endpoints
-- ✅ **Validation**: Request validation with meaningful error messages
-- ✅ **Exception Handling**: Global exception handler with consistent error responses
-- ✅ **API Documentation**: Swagger UI for interactive API testing
-- ✅ **Database Migration**: Liquibase for schema management
+# 2. Build and run
+export JWT_SECRET=your-very-secret-key
+./gradlew clean build
+./gradlew bootRun
 
-### Technical Features
+# 3. Open http://localhost:8087/swagger-ui.html
+```
 
-- **Spring Boot 4.0.0** with Java 25
-- **Spring Security** with JWT authentication
-- **Spring Data JPA** with PostgreSQL
-- **MapStruct** for object mapping
-- **Lombok** for reducing boilerplate
-- **SpringDoc OpenAPI** for API documentation
-- **Liquibase** for database versioning
-- **SLF4J** for logging
+### Option C: Kubernetes (EKS)
 
-## API Endpoints
+```bash
+kubectl apply -k k8s/overlays/production
+```
+
+> See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for complete deployment instructions.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Language | Java 25 |
+| Framework | Spring Boot 4.0.0 |
+| Security | Spring Security + JWT (JJWT 0.12.6) |
+| Database | PostgreSQL 15 (AWS RDS in production) |
+| ORM | Spring Data JPA / Hibernate |
+| Schema Management | Liquibase |
+| Object Mapping | MapStruct |
+| API Docs | SpringDoc OpenAPI / Swagger UI |
+| Containerization | Docker (multi-stage, Alpine) |
+| Orchestration | Kubernetes (AWS EKS) |
+| GitOps | ArgoCD + Kustomize |
+| CI/CD | GitHub Actions |
+| Monitoring | Spring Actuator + Prometheus |
+
+---
+
+## API Reference
 
 ### Authentication
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/v1/auth/login` | Authenticate and get JWT token | No |
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/v1/auth/login` | Get JWT token | No |
 
-**📖 For detailed authentication documentation, see [AUTHENTICATION.md](AUTHENTICATION.md)**
+**Default users:** `admin/admin123`, `user/user123`
+
+> See **[AUTHENTICATION.md](docs/AUTHENTICATION.md)** for full details.
 
 ### Products
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/api/v1/products` | Get all products (paginated) | Yes |
-| GET | `/api/v1/products/{code}` | Get product by code | Yes |
-| POST | `/api/v1/products` | Create a new product | Yes |
-| POST | `/api/v1/products/batch` | Create multiple products | Yes |
-| PUT | `/api/v1/products/{code}` | Update product (full) | Yes |
-| PATCH | `/api/v1/products/{code}` | Update product (partial) | Yes |
-| DELETE | `/api/v1/products/{code}` | Delete product | Yes |
-| DELETE | `/api/v1/products/batch` | Delete multiple products | Yes |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/products` | List products (paginated, filterable) |
+| GET | `/api/v1/products/{code}` | Get product by code |
+| POST | `/api/v1/products` | Create product |
+| POST | `/api/v1/products/batch` | Create multiple products |
+| PUT | `/api/v1/products/{code}` | Full update |
+| PATCH | `/api/v1/products/{code}` | Partial update |
+| DELETE | `/api/v1/products/{code}` | Delete product |
+| DELETE | `/api/v1/products/batch` | Delete multiple products |
 
-## Getting Started
+All product endpoints require JWT authentication (`Authorization: Bearer <token>`).
 
-### Prerequisites
-
-- Java 25 or newer
-- Spring Boot 4.0.0
-- Gradle 9.x (wrapper included)
-- PostgreSQL 13+ (or Docker)
-
-### Setup Database
-
-1. **Using Docker:**
-   ```bash
-   docker run --name product-catalog-db \
-     -e POSTGRES_DB=product_catalog_db \
-     -e POSTGRES_USER=postgres \
-     -e POSTGRES_PASSWORD=password \
-     -p 5432:5432 \
-     -d postgres:15
-   ```
-
-2. **Manual Setup:**
-   - Create database: `product_catalog_db`
-   - Update credentials in `application.yml` if needed
-
-### Setup & Running
-
-1. Ensure Java 25+ is installed: `java -version`
-2. Start PostgreSQL (see below for Docker command)
-3. (Optional) Set environment variables for JWT secret and server port:
-   - `export JWT_SECRET=your-very-secret-key`
-   - `export SERVER_PORT=8087` (default port)
-4. Build and run:
-   ```sh
-   ./gradlew clean build
-   ./gradlew bootRun
-   ```
-
-The application will start on `http://localhost:8087`
-
-## Docker Deployment
-
-### Quick Start with Docker Compose
+### Example Usage
 
 ```bash
-# Build and start all services
-docker-compose up -d --build
-
-# View logs
-docker-compose logs -f app
-
-# Stop services
-docker-compose down
-```
-
-### Using the Build Script
-
-```bash
-# Build Docker image
-./docker-build.sh build
-
-# Run with Docker Compose
-./docker-build.sh run
-
-# View logs
-./docker-build.sh logs
-
-# Stop services
-./docker-build.sh stop
-```
-
-### Manual Docker Build and Run
-
-```bash
-# Build image
-docker build -t product-catalog-service:latest .
-
-# Run container
-docker run -d \
-  --name product-catalog-service \
-  -p 8080:8080 \
-  -e SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/product_catalog_db \
-  -e SPRING_DATASOURCE_USERNAME=postgres \
-  -e SPRING_DATASOURCE_PASSWORD=password \
-  -e JWT_SECRET=your-very-secret-key \
-  product-catalog-service:latest
-```
-
-For comprehensive Docker deployment instructions, see **[DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)**
-
-### Access Swagger UI
-
-Open your browser and navigate to:
-```
-http://localhost:8080/swagger-ui.html
-```
-
-## Authentication
-
-### Login
-
-**Request:**
-```bash
-curl -X POST http://localhost:8080/api/v1/auth/login \
+# 1. Login
+TOKEN=$(curl -s -X POST http://localhost:8087/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{
-    "username": "admin",
-    "password": "admin123"
-  }'
-```
+  -d '{"username":"admin","password":"admin123"}' | jq -r '.token')
 
-**Response:**
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "type": "Bearer",
-  "expiresIn": 86400
-}
-```
-
-### Default Users
-
-| Username | Password | Description |
-|----------|----------|-------------|
-| admin | admin123 | Administrator user |
-| user | user123 | Regular user |
-
-**Note:** For production, implement proper user management with database storage.
-
-### Using JWT Token
-
-Include the token in the `Authorization` header:
-```bash
-curl -X GET http://localhost:8080/api/v1/products \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
-```
-
-## API Examples
-
-### Create a Product
-
-```bash
-curl -X POST http://localhost:8080/api/v1/products \
+# 2. Create product
+curl -X POST http://localhost:8087/api/v1/products \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{
     "code": "LAPTOP-001",
     "name": "Professional Laptop",
-    "description": "High-performance laptop for professionals",
-    "basePrice": {
-      "value": 1299.99,
-      "currency": "USD"
-    },
+    "description": "High-performance laptop",
+    "basePrice": {"value": 1299.99, "currency": "USD"},
     "isInStock": true,
     "stockKeepingUnit": "SKU-LAPTOP-001",
     "categoryCode": "electronics",
     "catalogCode": "main-catalog"
   }'
-```
 
-### Get Products with Pagination
+# 3. Get products with pagination and filtering
+curl "http://localhost:8087/api/v1/products?page=0&size=10&sort=name,asc&categoryCode=electronics&inStock=true" \
+  -H "Authorization: Bearer $TOKEN"
 
-```bash
-curl -X GET "http://localhost:8080/api/v1/products?page=0&size=10&sort=name,asc" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
-```
-
-### Filter Products
-
-```bash
-# Filter by category and stock status
-curl -X GET "http://localhost:8080/api/v1/products?categoryCode=electronics&inStock=true&page=0&size=20" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
-```
-
-### Update a Product (Partial)
-
-```bash
-curl -X PATCH http://localhost:8080/api/v1/products/LAPTOP-001 \
+# 4. Partial update
+curl -X PATCH http://localhost:8087/api/v1/products/LAPTOP-001 \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -d '{
-    "isInStock": false,
-    "basePrice": {
-      "value": 1199.99,
-      "currency": "USD"
-    }
-  }'
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"isInStock": false, "basePrice": {"value": 1199.99, "currency": "USD"}}'
+
+# 5. Delete
+curl -X DELETE http://localhost:8087/api/v1/products/LAPTOP-001 \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
-### Delete Multiple Products
+---
 
-```bash
-curl -X DELETE http://localhost:8080/api/v1/products/batch \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -d '["PRODUCT-001", "PRODUCT-002", "PRODUCT-003"]'
+## Package Structure
+
+```
+com.product.catalog/
+├── config/          # OpenAPI configuration
+├── controller/      # REST controllers (AuthController, ProductController)
+├── dto/             # Request/response DTOs
+├── domain/          # Domain models (business logic layer)
+├── entity/          # JPA entities (persistence layer)
+├── exception/       # Custom exceptions + GlobalExceptionHandler
+├── mapper/          # MapStruct mappers (DTO ↔ Domain ↔ Entity)
+├── repository/      # Spring Data JPA repositories
+├── security/        # JWT filter, SecurityConfig, UserDetailsService
+└── service/         # Business logic (interfaces + implementations)
 ```
 
-## Error Handling
+---
 
-All errors follow a consistent format:
+## Error Response Format
+
+All errors return a consistent JSON structure:
 
 ```json
 {
@@ -310,116 +172,61 @@ All errors follow a consistent format:
 }
 ```
 
-### HTTP Status Codes
+| Status | Meaning |
+|--------|---------|
+| 200 | Success (GET, PUT, PATCH) |
+| 201 | Created (POST) |
+| 204 | No Content (DELETE) |
+| 400 | Validation error |
+| 401 | Authentication required |
+| 404 | Resource not found |
+| 409 | Resource already exists |
+| 500 | Server error |
 
-- `200 OK`: Successful GET, PUT, PATCH
-- `201 Created`: Successful POST
-- `204 No Content`: Successful DELETE
-- `400 Bad Request`: Validation error
-- `401 Unauthorized`: Authentication required
-- `404 Not Found`: Resource not found
-- `409 Conflict`: Resource already exists
-- `500 Internal Server Error`: Server error
-
-## Best Practices Implemented
-
-### 1. API-Driven Development
-- OpenAPI specification first
-- DTOs generated from spec
-- Clear API contracts
-
-### 2. Clean Architecture
-- Separation of concerns
-- Domain-driven design
-- Layer independence
-
-### 3. Security
-- JWT-based authentication
-- Stateless authentication
-- Password encryption (BCrypt)
-
-### 4. Code Quality
-- Lombok for reducing boilerplate
-- MapStruct for type-safe mapping
-- Comprehensive logging
-- Exception handling
-
-### 5. Database
-- Liquibase for schema management
-- JPA for ORM
-- Repository pattern
-
-### 6. Testing
-- Test containers support
-- Spring Boot Test
-- Security test support
-
-## Configuration
-
-### Application Properties
-
-Key configuration in `application.yml`:
-
-```yaml
-# Database
-spring.datasource.url: jdbc:postgresql://localhost:5432/product_catalog_db
-spring.datasource.username: postgres
-spring.datasource.password: password
-
-# JWT
-jwt.secret: your-secret-key
-jwt.expiration: 86400000  # 24 hours
-
-# Server
-server.port: 8080
-```
-
-### Environment Variables
-
-- `DB_USERNAME`: Database username
-- `DB_PASSWORD`: Database password
-- `JWT_SECRET`: JWT signing secret
-- `JWT_EXPIRATION`: Token expiration time (ms)
-- `SERVER_PORT`: Server port
+---
 
 ## Monitoring
 
-### Health Check
-
 ```bash
-curl http://localhost:8080/actuator/health
+# Health check
+curl http://localhost:8087/actuator/health
+
+# Liveness (for Kubernetes)
+curl http://localhost:8087/actuator/health/liveness
+
+# Readiness (for Kubernetes)
+curl http://localhost:8087/actuator/health/readiness
+
+# Prometheus metrics
+curl http://localhost:8087/actuator/prometheus
+
+# Liquibase migration status
+curl http://localhost:8087/actuator/liquibase
 ```
 
-### Available Actuator Endpoints
+---
 
-- `/actuator/health`: Application health status
-- `/actuator/info`: Application information
-- `/actuator/liquibase`: Database migration information
+## Configuration
 
-## Future Enhancements
+### Key Environment Variables
 
-- [ ] User management with database
-- [ ] Role-based access control (RBAC)
-- [ ] Product images support
-- [ ] Search functionality (full-text search)
-- [ ] Caching (Redis)
-- [ ] Rate limiting
-- [ ] API versioning
-- [ ] Audit logging
-- [ ] Event-driven architecture (Kafka)
-- [ ] Metrics and monitoring (Prometheus, Grafana)
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `SERVER_PORT` | Application port | 8087 |
+| `DB_USERNAME` | Database username | postgres |
+| `DB_PASSWORD` | Database password | password |
+| `JWT_SECRET` | JWT signing secret | (built-in dev default) |
+| `JWT_EXPIRATION` | Token expiration (ms) | 86400000 (24h) |
 
-## Contributing
+### Profiles
 
-1. Follow the existing code style
-2. Write tests for new features
-3. Update documentation
-4. Use meaningful commit messages
+| Profile | Usage |
+|---------|-------|
+| `default` | Local development |
+| `kubernetes` | EKS deployment (set via ConfigMap) |
+
+---
 
 ## License
 
 This project is for educational purposes.
-
-## Contact
-
-For questions or support, contact: support@productcatalog.com
