@@ -2,6 +2,38 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **Full standards reference:** [`docs/SKILLS.md`](docs/SKILLS.md)
+> — covers coding guidelines, design patterns, architecture rules, formatting, testing standards, and git conventions.
+> CLAUDE.md holds the quick-reference constraints; SKILLS.md holds the detail.
+
+---
+
+## Hard Constraints (Non-Negotiable)
+
+These rules are enforced on every task, no exceptions:
+
+1. **Read before edit** — always read any file before modifying it in the same session.
+2. **4-layer architecture** — Controller → (Mapper) → Service → (Mapper) → Repository. Never skip a layer or cross-inject (e.g., no repository in a controller).
+3. **No Lombok** — project uses hand-written getters/setters/builders. Do not add `@Data`, `@Builder`, `@Getter`, `@Setter`, or any other Lombok annotation.
+4. **Constructor injection only** — never use `@Autowired` on fields or setters.
+5. **No entity in API responses** — always map Entity → Domain → DTO before returning from a controller.
+6. **Liquibase manages schema** — `ddl-auto: none` always; never use `create`, `update`, or `create-drop` in non-test profiles. Never edit an already-applied changelog.
+7. **Conventional Commits** — all commit messages must follow `type(scope): summary` format. See `docs/SKILLS.md §12`.
+8. **No secrets in code** — credentials and JWT secrets come from environment variables only.
+9. **Run tests after changes** — run `./gradlew test` after any Java code change to verify nothing is broken.
+10. **Swagger on all endpoints** — every new controller class needs `@Tag` + `@SecurityRequirement`; every method needs `@Operation`; every path/query param needs `@Parameter`.
+
+## Always Use These Tools / Commands
+
+| Situation | Command |
+|-----------|---------|
+| After any Java change | `./gradlew test` |
+| After mapper changes | `./gradlew clean build -x test` (MapStruct compiles at annotation processing) |
+| Full build with tests | `./gradlew clean build` |
+| Single test class | `./gradlew test --tests "com.product.catalog.XxxTest"` |
+
+---
+
 ## Build & Run Commands
 
 ```bash
